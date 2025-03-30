@@ -1,4 +1,4 @@
---Release 1.0.0
+--beta 1.0.3, unstable
 local compile = game.ReplicatedStorage.Compile
 
 -- Your client script must include a copy of the Loadstring module (you can clone the copy inside this script) inside it.
@@ -25,15 +25,31 @@ compile.OnServerInvoke = function(_, code: string)
 	luaux = luaux:gsub("%*%*", "^")
 	luaux = luaux:gsub("(%d+)%s*<<%s*(%d+)", "bit32.lshift(%1, %2)")
 	luaux = luaux:gsub("(%d+)%s*>>%s*(%d+)", "bit32.rshift(%1, %2)")
+	-- frozenset
+	luaux = luaux:gsub("frozenset%((.-)%)", "table.freeze(%1)")
+	-- set
+	luaux = luaux:gsub("set%((.-)%)", function(elements)
+		local table_elements = elements:match("^(.-)$") or ""
+		return `local set = {table_elements}; for k in pairs(set) do set[k] = true end`
+	end)
+	-- inline functions
+	--	 local x = inline(args) ... end
+	luaux = luaux:gsub("inline%((.-)%)", "function(%1)")
+	--	 inline x(args) ... end
+	luaux = luaux:gsub("inline (.-)", "function %1")
+	-- match
+	-- WIP
 	
 	print("\n"..luaux)
 
 	return luaux
 end
+
 -----------------------------------------
---wind's luaux suggestions: (1/4 done)
---❎ lambda expressions (given up on it[sorry :( ) --wide mouth
---❎ set and frozenset (as far as i know its impossible to create constants [unchangeable variables])
+--wind's luaux suggestions: (3.5/4 done)
+-- (changed lambda expressions to inline functions)
+--✅ inline functions (completed)
+--✅ set and frozenset (completed)
 --✅ try and execpt instead of pcall (completed)
---❎ match statement (given up on it sorry again :( )
------------------------------------------'
+--❎ match statement (work in progress)
+-----------------------------------------
